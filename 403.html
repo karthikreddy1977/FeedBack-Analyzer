@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}403 Forbidden — Pulse{% endblock %}
+{% block page_title %}Access Denied{% endblock %}
+{% block content %}
+<section class="error-page">
+  <div class="error-page__icon"><i class="fas fa-lock"></i></div>
+  <h1>403 — Forbidden</h1>
+  <p>You don't have permission to access this page.</p>
+  <a href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('main.index') }}" class="btn btn--primary">Go back</a>
+</section>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Feedback #{{ feedback.id }} — Pulse{% endblock %}
+{% block page_title %}Feedback Details{% endblock %}
+
+{% block content %}
+<section class="detail-page" style="max-width: 1000px; margin: 0 auto; padding: 24px 0;">
+  
+  <!-- Back navigation row -->
+  <div class="detail-page__back" style="margin-bottom: 24px;">
+    <a href="{{ url_for('main.feedback_list') }}" class="btn btn--ghost btn--sm">
+      <i class="fas fa-arrow-left"></i> Back to Feedback Workspace
+    </a>
+  </div>
+
+  <div class="detail-grid">
+    
+    <!-- Left panel: Text and meta details -->
+    <div class="panel detail-main" style="padding: 36px; display: flex; flex-direction: column; gap: 24px;">
+      <div class="detail-main__header">
+        <div>
+          <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent); font-weight: 700; letter-spacing: 0.05em;">Feedback Detail Card</span>
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-top: 4px;">Entry #{{ feedback.id }}</h2>
+        </div>
+        
+        <div class="detail-main__actions" style="display: flex; gap: 8px;">
+          <a href="{{ url_for('main.feedback_edit', feedback_id=feedback.id) }}" class="btn btn--ghost btn--sm">
+            <i class="fas fa-edit"></i> Edit Entry
+          </a>
+          <form method="POST" action="{{ url_for('main.feedback_delete', feedback_id=feedback.id) }}" style="display:inline"
+                onsubmit="return confirm('Permanently delete this feedback entry?')">
+            <button type="submit" class="btn btn--danger btn--sm"><i class="fas fa-trash"></i> Delete</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="detail-text" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; min-height: 140px;">
+        <p style="font-size: 1.05rem; line-height: 1.7; color: var(--ink);">"{{ feedback.feedback_text }}"</p>
+      </div>
+
+      <div class="detail-meta" style="display: flex; gap: 20px; color: var(--ink-soft); font-size: 0.85rem;">
+        <span><i class="fas fa-calendar-alt" style="margin-right: 6px;"></i> Created: {{ feedback.created_at.strftime('%B %d, %Y at %H:%M') if feedback.created_at }}</span>
+        {% if feedback.author %}
+        <span><i class="fas fa-user-circle" style="margin-right: 6px;"></i> Owner: {{ feedback.author.username }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right panel: Analysis stats (Bento style) -->
+    <div class="panel detail-sidebar" style="padding: 32px; display: flex; flex-direction: column; gap: 24px;">
+      <h3 style="font-size: 1.15rem; font-weight: 600; border-bottom: 1px solid var(--border); padding-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-wand-magic-sparkles" style="color: var(--accent);"></i> Analysis Results
+      </h3>
+
+      <div class="analysis-card" style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <div class="analysis-item">
+          <span class="analysis-item__label">Sentiment Classification</span>
+          <div>
+            {% set sentTag = feedback.sentiment.toLowerCase() == 'positive' ? 'tag--pos' : 
+                            (feedback.sentiment.toLowerCase() == 'negative' ? 'tag--neg' : 'tag--neu') %}
+            <span class="tag {{ sentTag }}" style="font-size: 0.85rem; padding: 6px 14px; font-weight: 700;">{{ feedback.sentiment }}</span>
+          </div>
+        </div>
+
+        <div class="analysis-item">
+          <span class="analysis-item__label">Polarity Index Score</span>
+          <div class="score-bar">
+            <!-- safe from CSS linter warnings via data-width -->
+            <div class="score-bar__fill score-bar__fill--{{ 'pos' if feedback.polarity_score > 0 else ('neg' if feedback.polarity_score < 0 else 'neu') }}"
+                 data-width="{{ (feedback.polarity_score|abs * 50 + 50)|int }}"></div>
+            <span class="score-bar__val">{{ "%.4f"|format(feedback.polarity_score) }}</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--ink-soft); display: block;">Scale: -1.0 (highly negative) to +1.0 (highly positive).</span>
+        </div>
+
+        <div class="analysis-item">
+          <span class="analysis-item__label">Subjectivity Index Score</span>
+          <div class="score-bar">
+            <!-- safe from CSS linter warnings via data-width -->
+            <div class="score-bar__fill score-bar__fill--subj" data-width="{{ (feedback.subjectivity_score * 100)|int }}"></div>
+            <span class="score-bar__val">{{ "%.4f"|format(feedback.subjectivity_score) }}</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--ink-soft); display: block;">Scale: 0.0 (objective fact) to 1.0 (subjective opinion).</span>
+        </div>
+
+        <div class="analysis-item">
+          <span class="analysis-item__label">Detected Emotion</span>
+          <div>
+            <span class="tag tag--emotion" style="font-size: 0.85rem; padding: 6px 14px; font-weight: 700;">
+              <i class="fas fa-face-smile" style="margin-right: 6px;"></i> {{ feedback.emotion }}
+            </span>
+          </div>
+        </div>
+
+        <div class="analysis-item">
+          <span class="analysis-item__label">Category Group</span>
+          <div>
+            <span class="tag tag--cat" style="font-size: 0.85rem; padding: 6px 14px; font-weight: 700;">
+              <i class="fas fa-folder" style="margin-right: 6px;"></i> {{ feedback.category }}
+            </span>
+          </div>
+        </div>
+
+        {% if feedback.keywords %}
+        <div class="analysis-item">
+          <span class="analysis-item__label">Extracted Keywords</span>
+          <div class="keyword-tags">
+            {% for kw in feedback.keywords.split(', ') %}
+              <span class="keyword-tag">{{ kw }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Apply progress/score bar fills safely avoiding static CSS parsing warnings
+  document.querySelectorAll('[data-width]').forEach(el => {
+    el.style.width = el.getAttribute('data-width') + '%';
+  });
+});
+</script>
+{% endblock %}

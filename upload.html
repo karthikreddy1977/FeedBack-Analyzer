@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}File Upload — Pulse{% endblock %}
+{% block page_title %}Bulk Feedback Import{% endblock %}
+
+{% block content %}
+<section class="upload-page" style="max-width: 960px; margin: 0 auto; padding: 24px 0;">
+  
+  <div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h2 style="font-size: 1.5rem; font-weight: 700;">Bulk Feedback Analysis</h2>
+      <p class="text-muted" style="font-size: 0.88rem;">Upload customer reviews via file import to analyze sentiment in batch.</p>
+    </div>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn--ghost btn--sm">
+      <i class="fas fa-arrow-left"></i> Dashboard
+    </a>
+  </div>
+
+  <div class="upload-grid">
+    
+    <!-- Left panel: File selection and upload -->
+    <div class="panel" style="padding: 32px;">
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 6px;">Select Import File</h3>
+        <p class="text-muted" style="font-size: 0.82rem;">Select or drop a CSV or TXT file to process entries. Each row or line will be parsed and evaluated individually.</p>
+      </div>
+
+      <form id="uploadForm" enctype="multipart/form-data">
+        <div class="upload-zone" id="uploadZone">
+          <i class="fas fa-cloud-upload-alt upload-zone__icon"></i>
+          <p class="upload-zone__text">Drag & drop your feedback file here</p>
+          <p class="upload-zone__hint">Supports CSV and TXT files (up to 16 MB)</p>
+          <button type="button" class="btn btn--ghost btn--sm" style="pointer-events: none; margin-top: 8px;">
+            <i class="fas fa-search"></i> Browse Files
+          </button>
+          <input type="file" id="fileInput" name="file" accept=".csv,.txt" hidden>
+        </div>
+
+        <!-- Selected file indicator -->
+        <div class="upload-file-info" id="fileInfo" hidden>
+          <i class="fas fa-file-csv" style="font-size: 1.5rem; color: var(--accent);"></i>
+          <div>
+            <span id="fileName" style="font-weight: 600; display: block; font-size: 0.9rem;">feedback_list.csv</span>
+            <span class="text-muted" style="font-size: 0.75rem;">Ready to upload</span>
+          </div>
+          <button type="button" class="btn btn--ghost btn--sm" id="clearFile" style="margin-left: auto; padding: 6px 10px;">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="form-group" style="margin-top: 24px; margin-bottom: 24px;">
+          <label for="uploadCategory" class="form-label" style="font-weight: 600;">Fallback Category Classification</label>
+          <select id="uploadCategory" name="category" class="form-control">
+            <option value="Product">Product</option>
+            <option value="Service">Service</option>
+            <option value="Delivery">Delivery</option>
+            <option value="Support">Support</option>
+            <option value="Website">Website</option>
+            <option value="Other" selected>Other</option>
+          </select>
+          <span style="font-size: 0.75rem; color: var(--ink-soft); display: block; margin-top: 4px;">Used when entries do not specify an explicit category field.</span>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--full" id="uploadBtn" disabled>
+          <i class="fas fa-wand-magic-sparkles"></i> Process & Analyze Upload
+        </button>
+      </form>
+
+      <!-- Processing Progress bar -->
+      <div class="upload-progress" id="uploadProgress" hidden>
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="progressFill"></div>
+        </div>
+        <span class="text-muted" id="progressText" style="font-size: 0.82rem; font-weight: 500;">Reading entries...</span>
+      </div>
+    </div>
+
+    <!-- Right panel: Quick results summary (initially hidden) -->
+    <div class="panel" id="uploadResults" hidden style="background: linear-gradient(135deg, var(--surface) 0%, rgba(99, 102, 241, 0.03) 100%); border-color: rgba(99, 102, 241, 0.15);">
+      <div style="border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 20px;">
+        <h3 style="font-size: 1.15rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-square-poll-vertical" style="color: var(--accent);"></i> Analysis Results
+        </h3>
+        <p class="text-muted" style="font-size: 0.82rem; margin-top: 4px;">Overview of the uploaded file contents processed by Pulse AI.</p>
+      </div>
+
+      <div class="upload-results__stats">
+        <div class="result-stat result-stat--total">
+          <span class="result-stat__num" id="resTotal">0</span>
+          <span class="result-stat__label">Analyzed</span>
+        </div>
+        <div class="result-stat result-stat--positive">
+          <span class="result-stat__num" id="resPositive">0</span>
+          <span class="result-stat__label">Positive</span>
+        </div>
+        <div class="result-stat result-stat--negative">
+          <span class="result-stat__num" id="resNegative">0</span>
+          <span class="result-stat__label">Negative</span>
+        </div>
+        <div class="result-stat result-stat--neutral">
+          <span class="result-stat__num" id="resNeutral">0</span>
+          <span class="result-stat__label">Neutral</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 10px;">
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn--primary btn--full">
+          Open Workspace Dashboard <i class="fas fa-chart-pie"></i>
+        </a>
+        <a href="{{ url_for('main.feedback_list') }}" class="btn btn--ghost btn--full">
+          Browse Analyzed Feedback <i class="fas fa-list"></i>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const uploadZone = document.getElementById("uploadZone");
+  const fileInput = document.getElementById("fileInput");
+  const fileInfo = document.getElementById("fileInfo");
+  const fileName = document.getElementById("fileName");
+  const clearFile = document.getElementById("clearFile");
+  const uploadBtn = document.getElementById("uploadBtn");
+  const uploadForm = document.getElementById("uploadForm");
+  const uploadProgress = document.getElementById("uploadProgress");
+  const progressFill = document.getElementById("progressFill");
+  const progressText = document.getElementById("progressText");
+  const uploadResults = document.getElementById("uploadResults");
+
+  uploadZone.addEventListener("click", () => fileInput.click());
+  
+  uploadZone.addEventListener("dragover", e => { 
+    e.preventDefault(); 
+    uploadZone.classList.add("drag-over"); 
+  });
+  
+  uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag-over"));
+  
+  uploadZone.addEventListener("drop", e => {
+    e.preventDefault();
+    uploadZone.classList.remove("drag-over");
+    if (e.dataTransfer.files.length) { 
+      fileInput.files = e.dataTransfer.files; 
+      showFile(); 
+    }
+  });
+
+  fileInput.addEventListener("change", showFile);
+
+  function showFile() {
+    if (fileInput.files.length) {
+      fileName.textContent = fileInput.files[0].name;
+      fileInfo.hidden = false;
+      uploadZone.hidden = true;
+      uploadBtn.disabled = false;
+    }
+  }
+
+  clearFile.addEventListener("click", () => {
+    fileInput.value = "";
+    fileInfo.hidden = true;
+    uploadZone.hidden = false;
+    uploadBtn.disabled = true;
+  });
+
+  uploadForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    if (!fileInput.files.length) return;
+
+    uploadBtn.disabled = true;
+    uploadProgress.hidden = false;
+    progressFill.style.width = "25%";
+    progressText.textContent = "Uploading feedback file...";
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    formData.append("category", document.getElementById("uploadCategory").value);
+
+    try {
+      progressFill.style.width = "65%";
+      progressText.textContent = "Analyzing sentiments with AI engine...";
+      
+      const res = await fetch("/upload", { method: "POST", body: formData });
+      const data = await res.json();
+
+      progressFill.style.width = "100%";
+
+      if (data.success) {
+        progressText.textContent = "Processing and classification complete!";
+        uploadResults.hidden = false;
+        document.getElementById("resTotal").textContent = data.results.total;
+        document.getElementById("resPositive").textContent = data.results.positive;
+        document.getElementById("resNegative").textContent = data.results.negative;
+        document.getElementById("resNeutral").textContent = data.results.neutral;
+        window.showToast && showToast(`${data.results.total} feedback rows analyzed and classified.`, "success");
+      } else {
+        progressText.textContent = data.error || "Failed to complete processing.";
+        window.showToast && showToast(data.error || "File import processing failed.", "error");
+      }
+    } catch (err) {
+      progressText.textContent = "Server communication failure.";
+      window.showToast && showToast("A network error occurred during file upload.", "error");
+    }
+
+    uploadBtn.disabled = false;
+  });
+});
+</script>
+{% endblock %}

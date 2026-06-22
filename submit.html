@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Submit Feedback — Pulse{% endblock %}
+{% block page_title %}New Entry Analysis{% endblock %}
+
+{% block content %}
+<section class="submit-page" style="max-width: 960px; margin: 0 auto; padding: 24px 0;">
+  
+  <div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h2 style="font-size: 1.5rem; font-weight: 700;">Submit Customer Feedback</h2>
+      <p class="text-muted" style="font-size: 0.88rem;">Write or paste user reviews. Pulse AI will run real-time sentiment extraction.</p>
+    </div>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn--ghost btn--sm">
+      <i class="fas fa-arrow-left"></i> Dashboard
+    </a>
+  </div>
+
+  <div class="upload-grid">
+    
+    <!-- Left Panel: Input form -->
+    <div class="panel" style="padding: 32px;">
+      <form id="feedbackForm" novalidate>
+        <div class="form-group">
+          <label for="feedback_text" class="form-label" style="font-weight: 600;">Feedback Review Text</label>
+          <textarea
+            id="feedback_text"
+            name="feedback_text"
+            class="form-control"
+            rows="6"
+            maxlength="2000"
+            placeholder="e.g. The new checkout flow saved me so much time, but the confirmation email took forever to arrive."
+            required
+            style="font-size: 0.95rem; line-height: 1.6;"></textarea>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.8rem;">
+            <span id="charCount" class="text-muted">0 / 2000 characters</span>
+            <span id="formError" style="color: var(--negative); font-weight: 600;" role="alert"></span>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 32px;">
+          <label for="category" class="form-label" style="font-weight: 600;">Feedback Category Classification</label>
+          <select id="category" name="category" class="form-control">
+            <option value="Product">Product</option>
+            <option value="Service">Service</option>
+            <option value="Delivery">Delivery</option>
+            <option value="Support">Support</option>
+            <option value="Website">Website</option>
+            <option value="Other" selected>Other</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--full" id="submitBtn">
+          Run AI Analysis <i class="fas fa-wand-magic-sparkles"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- Right Panel: Result Panel (Initially hidden, revealed on submit) -->
+    <div class="panel" id="resultPanel" hidden style="background: linear-gradient(135deg, var(--surface) 0%, rgba(99, 102, 241, 0.03) 100%); border-color: rgba(99, 102, 241, 0.15); display: flex; flex-direction: column; gap: 20px;">
+      <div style="border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 4px;">
+        <h3 style="font-size: 1.15rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-square-poll-vertical" style="color: var(--accent);"></i> Real-time AI Analysis
+        </h3>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding-bottom: 10px;">
+          <span class="text-muted" style="font-size: 0.85rem; font-weight: 500;">Sentiment Class</span>
+          <span class="tag tag--neu" id="resSentiment" style="font-weight: 700; font-size: 0.82rem; padding: 4px 10px;">—</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding-bottom: 10px;">
+          <span class="text-muted" style="font-size: 0.85rem; font-weight: 500;">Polarity Score</span>
+          <span class="mono" id="resPolarity" style="font-weight: 700; font-size: 0.9rem; color: var(--ink);">—</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding-bottom: 10px;">
+          <span class="text-muted" style="font-size: 0.85rem; font-weight: 500;">Subjectivity Score</span>
+          <span class="mono" id="resSubjectivity" style="font-weight: 700; font-size: 0.9rem; color: var(--ink);">—</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding-bottom: 10px;">
+          <span class="text-muted" style="font-size: 0.85rem; font-weight: 500;">Emotion Detected</span>
+          <span class="tag tag--emotion" id="resEmotion" style="font-weight: 700; font-size: 0.82rem; padding: 4px 10px;">—</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding-bottom: 10px;">
+          <span class="text-muted" style="font-size: 0.85rem; font-weight: 500;">Category Match</span>
+          <span class="tag tag--cat" id="resCategory" style="font-weight: 700; font-size: 0.82rem; padding: 4px 10px;">—</span>
+        </div>
+
+      </div>
+
+      <div id="resKeywordsWrap" hidden style="margin-top: 4px;">
+        <span class="text-muted" style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Extracted Keywords</span>
+        <div class="keyword-tags" id="resKeywords"></div>
+      </div>
+
+      <div style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px; display: flex; flex-direction: column; gap: 10px;">
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn--primary btn--full">
+          Open Dashboard <i class="fas fa-chart-pie"></i>
+        </a>
+        <button type="button" class="btn btn--ghost btn--full" onclick="document.getElementById('feedback_text').value=''; document.getElementById('resultPanel').hidden=true; document.getElementById('charCount').textContent='0 / 2000 characters';">
+          Submit Another Entry
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+{% endblock %}

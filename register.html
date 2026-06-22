@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Sign up — Pulse{% endblock %}
+{% block page_title %}Create Account{% endblock %}
+
+{% block content %}
+<div class="auth-layout" style="margin: -16px; min-height: 100vh;">
+  <!-- Left Side: Animated Liquid Glass Hero Panel -->
+  <div class="auth-hero">
+    <div class="auth-hero__shapes">
+      <div class="auth-shape auth-shape--1"></div>
+      <div class="auth-shape auth-shape--2"></div>
+    </div>
+    
+    <div class="auth-hero__content" style="position: relative; z-index: 2;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 32px;">
+        <div class="sidebar__logo" style="width: 40px; height: 40px;"></div>
+        <span class="sidebar__name" style="font-size: 1.8rem; color: #fff;">Pulse</span>
+      </div>
+      <h1>Start listening to customer sentiment.</h1>
+      <p class="text-muted" style="font-size: 1.15rem; line-height: 1.6; margin-top: 16px;">
+        Gain a competitive edge by automatically classifying customer emotions, detecting categories, and extracting insights from your database.
+      </p>
+    </div>
+  </div>
+
+  <!-- Right Side: Floating Glass Register Card -->
+  <div class="auth-panel">
+    <div class="auth-card" style="max-width: 440px;">
+      <div class="auth-card__header">
+        <h2>Create an account</h2>
+        <p class="text-muted">Register to start analyzing feedback with AI</p>
+      </div>
+
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" id="username" name="username" class="form-control" required placeholder="Choose a username" value="{{ username or '' }}" minlength="3" maxlength="80" pattern="[a-zA-Z0-9_]+">
+          <span style="font-size: 0.75rem; color: var(--ink-soft); display: block; margin-top: 4px;">Alphanumeric and underscores only (min 3 characters)</span>
+        </div>
+
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" id="email" name="email" class="form-control" required placeholder="you@company.com" value="{{ email or '' }}">
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-control" required placeholder="••••••••" minlength="8">
+          <span style="font-size: 0.75rem; color: var(--ink-soft); display: block; margin-top: 4px;">Min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char</span>
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password" class="form-label">Confirm Password</label>
+          <input type="password" id="confirm_password" name="confirm_password" class="form-control" required placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--full" style="margin-top: 12px;">
+          Create Account <i class="fas fa-user-plus"></i>
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 32px; font-size: 0.88rem; color: var(--ink-soft);">
+        <span>Already have an account? </span>
+        <a href="{{ url_for('auth.login') }}" style="color: var(--accent); font-weight: 600;">Log in</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
