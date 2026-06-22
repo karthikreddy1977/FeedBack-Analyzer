@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Notifications — Pulse{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<section class="notifications-page" style="max-width: 760px; margin: 0 auto; padding: 24px 0;">
+  
+  <!-- Page Header -->
+  <div class="notifications-page__header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+      <h2 style="font-size: 1.5rem; font-weight: 700;">Workspace Alerts</h2>
+      <p class="text-muted" style="font-size: 0.88rem;">Stay up-to-date with your analytical exports, imports, and system events.</p>
+    </div>
+    {% if notifications %}
+    <button class="btn btn--ghost btn--sm" id="markAllReadPage" type="button">
+      <i class="fas fa-check-double"></i> Mark all read
+    </button>
+    {% endif %}
+  </div>
+
+  <!-- Notifications List Panel -->
+  <div class="panel" style="padding: 32px;">
+    {% if notifications %}
+    <div class="notif-full-list">
+      {% for n in notifications %}
+      <div class="notif-full-item {{ 'is-unread' if not n.is_read }}" data-id="{{ n.id }}">
+        <div class="notif-full-item__icon">
+          <i class="fas fa-bell"></i>
+        </div>
+        <div class="notif-full-item__body">
+          <p>{{ n.message }}</p>
+          <span class="text-muted">{{ n.created_at.strftime('%B %d, %Y at %H:%M') if n.created_at }}</span>
+        </div>
+        {% if not n.is_read %}
+        <button class="btn btn--ghost btn--sm mark-read-btn" data-id="{{ n.id }}" title="Mark as read" style="padding: 6px 12px;">
+          Mark read <i class="fas fa-check"></i>
+        </button>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 48px; border: 1px dashed var(--border); border-radius: var(--radius-lg);">
+      <i class="fas fa-bell-slash" style="font-size: 2.2rem; color: var(--ink-soft); margin-bottom: 16px; display: block;"></i>
+      <p class="text-muted" style="font-size: 0.9rem;">You don't have any notifications at the moment.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Mark individual read
+  document.querySelectorAll(".mark-read-btn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await fetch(`/api/notifications/${btn.dataset.id}/read`, { method: "POST" });
+      const item = btn.closest(".notif-full-item");
+      if (item) {
+        item.classList.remove("is-unread");
+      }
+      btn.remove();
+    });
+  });
+
+  // Mark all read
+  document.getElementById("markAllReadPage")?.addEventListener("click", async () => {
+    await fetch("/api/notifications/read-all", { method: "POST" });
+    document.querySelectorAll(".notif-full-item").forEach(el => {
+      el.classList.remove("is-unread");
+      el.querySelector(".mark-read-btn")?.remove();
+    });
+  });
+});
+</script>
+{% endblock %}

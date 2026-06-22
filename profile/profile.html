@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Profile — Pulse{% endblock %}
+{% block page_title %}Account Profile{% endblock %}
+
+{% block content %}
+<section class="profile-page" style="max-width: 960px; margin: 0 auto; padding: 24px 0;">
+  
+  <div class="bento-grid">
+    
+    <!-- Bento Card 1: Profile Overview (2 columns) -->
+    <div class="panel bento-col-2" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; position: relative;">
+      
+      <!-- Avatar container -->
+      <div style="position: relative; margin-bottom: 20px;">
+        <div style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--accent); overflow: hidden; background: var(--surface-raised); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md);">
+          {% if current_user.profile_image and current_user.profile_image != 'default.png' %}
+            <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.profile_image) }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+          {% else %}
+            <i class="fas fa-user" style="font-size: 3.5rem; color: var(--ink-soft);"></i>
+          {% endif %}
+        </div>
+        
+        <!-- Camera upload icon -->
+        <form method="POST" action="{{ url_for('profile.upload_avatar') }}" enctype="multipart/form-data" style="position: absolute; bottom: 0; right: 0;">
+          <label style="width: 34px; height: 34px; border-radius: 50%; background: var(--accent-gradient); border: 2px solid var(--surface); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-sm); transition: var(--transition);">
+            <i class="fas fa-camera" style="font-size: 0.85rem;"></i>
+            <input type="file" name="avatar" accept="image/*" onchange="this.form.submit()" hidden>
+          </label>
+        </form>
+      </div>
+
+      <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--ink);">{{ current_user.username }}</h2>
+      <p class="text-muted" style="font-size: 0.9rem; margin-top: 4px; margin-bottom: 12px;">{{ current_user.email }}</p>
+      <span class="tag tag--cat" style="font-size: 0.75rem; padding: 4px 12px; font-weight: 700;">{{ 'System Administrator' if current_user.is_admin else 'Workspace User' }}</span>
+
+      <!-- Statistics Widgets -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%; margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-size: 1.6rem; font-weight: 700; color: var(--accent);">{{ total_feedback }}</span>
+          <span class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Feedbacks</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; border-left: 1px solid var(--border); border-right: 1px solid var(--border);">
+          <span style="font-size: 1.25rem; font-weight: 700; color: var(--ink); line-height: 2.2rem;">{{ current_user.created_at.strftime('%b %Y') if current_user.created_at else 'N/A' }}</span>
+          <span class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Member Since</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-size: 1.25rem; font-weight: 700; color: var(--ink); line-height: 2.2rem;">{{ current_user.last_login.strftime('%b %d') if current_user.last_login else 'N/A' }}</span>
+          <span class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Last Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bento Card 2: Account Settings (2 columns) -->
+    <div class="panel bento-col-2" style="padding: 40px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-user-gear" style="color: var(--accent);"></i> Account Settings
+        </h3>
+
+        <form method="POST" action="{{ url_for('profile.update_profile') }}">
+          <div class="form-group">
+            <label for="username" class="form-label" style="font-weight: 600;">Display Name / Username</label>
+            <input type="text" id="username" name="username" class="form-control" value="{{ current_user.username }}" required minlength="3">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label for="email" class="form-label" style="font-weight: 600;">Email Address</label>
+            <input type="email" id="email" name="email" class="form-control" value="{{ current_user.email }}" required>
+          </div>
+
+          <button type="submit" class="btn btn--primary">
+            Save Changes <i class="fas fa-save"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- Footer action for security settings -->
+      <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h4 style="font-size: 0.92rem; font-weight: 700;">Security Options</h4>
+          <p class="text-muted" style="font-size: 0.78rem; margin-top: 2px;">Ensure your account remains safe and protected.</p>
+        </div>
+        <a href="{{ url_for('auth.change_password') }}" class="btn btn--ghost btn--sm">
+          Change Password <i class="fas fa-key"></i>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

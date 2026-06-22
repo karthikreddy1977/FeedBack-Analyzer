@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Reports — Pulse{% endblock %}
+{% block page_title %}Workspace Reports{% endblock %}
+
+{% block content %}
+<section class="reports-page" style="max-width: 960px; margin: 0 auto; padding: 24px 0;">
+  
+  <div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h2 style="font-size: 1.5rem; font-weight: 700;">Reports Workspace</h2>
+      <p class="text-muted" style="font-size: 0.88rem;">Export your workspace analytics in CSV, Excel, or PDF format.</p>
+    </div>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn--ghost btn--sm">
+      <i class="fas fa-arrow-left"></i> Dashboard
+    </a>
+  </div>
+
+  <div class="bento-grid">
+    
+    <!-- Generate Report (2 columns) -->
+    <div class="panel bento-col-2" style="padding: 32px;">
+      <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-file-export" style="color: var(--accent);"></i> Generate New Report
+      </h3>
+      <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 24px;">Configure the target file format for exporting all your processed feedback data and statistics.</p>
+      
+      <form method="POST" action="{{ url_for('reports.generate_report') }}">
+        <div class="format-options">
+          <label class="format-option">
+            <input type="radio" name="format" value="csv" checked>
+            <div class="format-option__card">
+              <i class="fas fa-file-csv"></i>
+              <span>CSV</span>
+            </div>
+          </label>
+          <label class="format-option">
+            <input type="radio" name="format" value="xlsx">
+            <div class="format-option__card">
+              <i class="fas fa-file-excel"></i>
+              <span>Excel</span>
+            </div>
+          </label>
+          <label class="format-option">
+            <input type="radio" name="format" value="pdf">
+            <div class="format-option__card">
+              <i class="fas fa-file-pdf"></i>
+              <span>PDF</span>
+            </div>
+          </label>
+        </div>
+        
+        <button type="submit" class="btn btn--primary btn--full" style="margin-top: 8px;">
+          Generate & Save Report <i class="fas fa-cog"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- Reports History (2 columns) -->
+    <div class="panel bento-col-2" style="padding: 32px; display: flex; flex-direction: column;">
+      <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-clock-rotate-left" style="color: var(--accent);"></i> Report History
+      </h3>
+      
+      {% if reports %}
+      <div class="table-responsive" style="flex: 1;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>File Name</th>
+              <th>Format</th>
+              <th style="width: 120px; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for report in reports %}
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <i class="fas fa-file-alt" style="color: var(--accent);"></i>
+                  <strong style="font-size: 0.88rem; font-weight: 600; display: block; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ report.report_name }}</strong>
+                </div>
+              </td>
+              <td><span class="tag tag--cat" style="font-size: 0.72rem; font-weight: 700;">{{ report.format|upper }}</span></td>
+              <td style="text-align: right;">
+                <div style="display: inline-flex; gap: 6px; justify-content: flex-end;">
+                  <a href="{{ url_for('reports.download_report', report_id=report.id) }}" class="btn btn--ghost btn--sm" style="padding: 5px 8px;" title="Download">
+                    <i class="fas fa-download"></i>
+                  </a>
+                  <form method="POST" action="{{ url_for('reports.delete_report', report_id=report.id) }}" style="display:inline"
+                        onsubmit="return confirm('Permanently delete this report?')">
+                    <button type="submit" class="btn btn--danger btn--sm" style="padding: 5px 8px;" title="Delete"><i class="fas fa-trash"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 160px; border: 1px dashed var(--border); border-radius: var(--radius-lg);">
+        <p class="text-muted text-center" style="font-size: 0.88rem; padding: 16px;">No reports generated yet. Compile your first report using the configuration panel.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+{% endblock %}

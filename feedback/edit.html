@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Edit Feedback #{{ feedback.id }} — Pulse{% endblock %}
+{% block page_title %}Edit Feedback{% endblock %}
+
+{% block content %}
+<section class="edit-page" style="max-width: 680px; margin: 0 auto; padding: 24px 0;">
+  
+  <div style="margin-bottom: 24px;">
+    <a href="{{ url_for('main.feedback_detail', feedback_id=feedback.id) }}" class="btn btn--ghost btn--sm">
+      <i class="fas fa-arrow-left"></i> Back to Detail
+    </a>
+  </div>
+
+  <div class="panel" style="padding: 40px;">
+    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+      <div style="width: 46px; height: 46px; border-radius: var(--radius-md); background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+        <i class="fas fa-pen-to-square"></i>
+      </div>
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 700;">Edit Feedback Entry #{{ feedback.id }}</h2>
+        <p class="text-muted" style="font-size: 0.88rem; margin-top: 4px;">Update text contents or categories. Pulse AI will re-analyze sentiment and emotion on save.</p>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('main.feedback_edit', feedback_id=feedback.id) }}">
+      
+      <div class="form-group">
+        <label for="feedback_text" class="form-label" style="font-weight: 600;">Feedback Text Content</label>
+        <textarea id="feedback_text" name="feedback_text" class="form-control" rows="6" maxlength="2000" required placeholder="Write or paste customer feedback text here..." style="font-size: 0.95rem; line-height: 1.6;">{{ feedback.feedback_text }}</textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 32px;">
+        <label for="category" class="form-label" style="font-weight: 600;">Classification Category</label>
+        <select id="category" name="category" class="form-control">
+          {% for cat in ['Product', 'Service', 'Delivery', 'Support', 'Website', 'Other'] %}
+            <option value="{{ cat }}" {{ 'selected' if feedback.category == cat }}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 24px;">
+        <a href="{{ url_for('main.feedback_detail', feedback_id=feedback.id) }}" class="btn btn--ghost">Cancel</a>
+        <button type="submit" class="btn btn--primary">
+          Save & Re-Analyze <i class="fas fa-wand-magic-sparkles"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

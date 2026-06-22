@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}404 Not Found — Pulse{% endblock %}
+{% block page_title %}Page Not Found{% endblock %}
+{% block content %}
+<section class="error-page">
+  <div class="error-page__icon"><i class="fas fa-compass"></i></div>
+  <h1>404 — Not Found</h1>
+  <p>The page you're looking for doesn't exist or has been moved.</p>
+  <a href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('main.index') }}" class="btn btn--primary">Go home</a>
+</section>
+{% endblock %}

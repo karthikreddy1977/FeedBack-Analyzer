@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Pulse — AI-powered customer feedback sentiment analyzer with advanced analytics, emotion detection, and insights.">
+<title>{% block title %}Pulse — AI Feedback Analytics{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+  :root {
+    --font-body: "Inter", sans-serif;
+    --font-heading: "Plus Jakarta Sans", sans-serif;
+  }
+  h1, h2, h3, h4, h5, .sidebar__name {
+    font-family: var(--font-heading);
+  }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+
+{% if current_user.is_authenticated %}
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar__brand">
+    <div class="sidebar__logo" aria-hidden="true"></div>
+    <span class="sidebar__name">Pulse</span>
+  </div>
+
+  <nav class="sidebar__nav">
+    <span class="sidebar__section-title">Workspace</span>
+    <a href="{{ url_for('main.dashboard') }}" class="sidebar__link {{ 'is-active' if request.path == '/dashboard' }}">
+      <i class="fas fa-chart-pie"></i><span>Dashboard</span>
+    </a>
+    <a href="{{ url_for('main.feedback_list') }}" class="sidebar__link {{ 'is-active' if request.path.startswith('/feedback') and not request.path.endswith('/upload') }}">
+      <i class="fas fa-list-alt"></i><span>Feedback</span>
+    </a>
+    <a href="{{ url_for('main.submit_page') }}" class="sidebar__link {{ 'is-active' if request.path == '/submit' }}">
+      <i class="fas fa-plus-circle"></i><span>New Entry</span>
+    </a>
+    <a href="{{ url_for('main.upload_page') }}" class="sidebar__link {{ 'is-active' if request.path == '/upload' }}">
+      <i class="fas fa-cloud-upload-alt"></i><span>Bulk Upload</span>
+    </a>
+    <a href="{{ url_for('reports.reports_list') }}" class="sidebar__link {{ 'is-active' if request.path.startswith('/reports') }}">
+      <i class="fas fa-file-export"></i><span>Reports</span>
+    </a>
+    <a href="{{ url_for('notifications.notifications_page') }}" class="sidebar__link {{ 'is-active' if request.path.startswith('/notifications') }}">
+      <i class="fas fa-bell"></i><span>Notifications</span>
+    </a>
+
+    {% if current_user.is_admin %}
+    <div class="sidebar__divider"></div>
+    <span class="sidebar__section-title">Admin</span>
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar__link {{ 'is-active' if request.path.startswith('/admin') }}">
+      <i class="fas fa-shield-alt"></i><span>Admin Panel</span>
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar__footer">
+    <div class="sidebar__user">
+      <div class="sidebar__avatar">
+        {% if current_user.profile_image and current_user.profile_image != 'default.png' %}
+          <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.profile_image) }}" alt="Avatar">
+        {% else %}
+          <i class="fas fa-user" style="color: var(--ink-soft);"></i>
+        {% endif %}
+      </div>
+      <div class="sidebar__user-info">
+        <span class="sidebar__username">{{ current_user.username }}</span>
+        <span class="sidebar__role">{{ 'Admin' if current_user.is_admin else 'User' }}</span>
+      </div>
+    </div>
+  </div>
+</aside>
+{% endif %}
+
+<!-- ==================== MAIN CONTENT ==================== -->
+<div class="main-wrapper {{ 'has-sidebar' if current_user.is_authenticated }}">
+
+  <!-- Top navbar -->
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        {% if current_user.is_authenticated %}
+        <button class="topbar__hamburger" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+        {% else %}
+        <a href="{{ url_for('main.index') }}" class="brand" style="display: flex; align-items: center; gap: 10px;">
+          <div class="sidebar__logo" style="width: 28px; height: 28px;"></div>
+          <span class="sidebar__name" style="font-size: 1.25rem;">Pulse</span>
+        </a>
+        {% endif %}
+
+        <div class="topbar__title">
+          <h1 class="topbar__page-title">{% block page_title %}{% endblock %}</h1>
+        </div>
+      </div>
+
+      <div class="topbar__actions">
+        {% if not current_user.is_authenticated %}
+        <nav class="navlinks" style="display: flex; gap: 10px;">
+          <a href="{{ url_for('auth.login') }}" class="btn btn--ghost btn--sm">Log in</a>
+          <a href="{{ url_for('auth.register') }}" class="btn btn--primary btn--sm">Sign up</a>
+        </nav>
+        {% else %}
+        
+        <!-- Search bar -->
+        <div class="topbar__search">
+          <i class="fas fa-search"></i>
+          <input type="text" id="globalSearch" placeholder="Search feedback..." onkeydown="if(event.key==='Enter') window.location.href='{{ url_for('main.feedback_list') }}?search='+this.value">
+        </div>
+
+        <!-- Notification bell -->
+        <div class="notif-bell" id="notifBell">
+          <button class="notif-bell__btn" type="button" aria-label="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notif-bell__badge" id="notifBadge" hidden>0</span>
+          </button>
+          <div class="notif-dropdown" id="notifDropdown" hidden>
+            <div class="notif-dropdown__header">
+              <span>Notifications</span>
+              <button class="notif-dropdown__mark-all" id="markAllRead" type="button">Mark all read</button>
+            </div>
+            <div class="notif-dropdown__list" id="notifList">
+              <p class="notif-dropdown__empty">No notifications</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Theme toggle -->
+        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <i class="fas fa-sun" id="themeIcon"></i>
+        </button>
+
+        <!-- User dropdown -->
+        <div class="user-dropdown" id="userDropdown">
+          <button class="user-dropdown__btn" type="button">
+            <div class="user-dropdown__avatar">
+              {% if current_user.profile_image and current_user.profile_image != 'default.png' %}
+                <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.profile_image) }}" alt="Avatar">
+              {% else %}
+                <i class="fas fa-user" style="color: var(--ink-soft); font-size: 0.8rem;"></i>
+              {% endif %}
+            </div>
+            <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: var(--ink-soft);"></i>
+          </button>
+          <div class="user-dropdown__menu" id="userDropdownMenu" hidden>
+            <a href="{{ url_for('profile.profile_page') }}"><i class="fas fa-user-circle"></i> Profile</a>
+            <a href="{{ url_for('auth.change_password') }}"><i class="fas fa-key"></i> Change Password</a>
+            <div class="user-dropdown__divider"></div>
+            <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Log out</a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash messages / Toast container -->
+  <div class="toast-container" id="toastContainer">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="toast toast--{{ category }}" data-auto-dismiss>
+            <div class="toast__icon">
+              {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+              {% elif category == 'error' %}<i class="fas fa-exclamation-circle"></i>
+              {% elif category == 'info' %}<i class="fas fa-info-circle"></i>
+              {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+            </div>
+            <span class="toast__message">{{ message }}</span>
+            <button class="toast__close" type="button" aria-label="Dismiss">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Page content -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="sitefoot" style="text-align: center; margin-top: 48px; padding: 24px 0; border-top: 1px solid var(--border); color: var(--ink-soft); font-size: 0.82rem; display: flex; justify-content: space-between; align-items: center;">
+    <span>Pulse &middot; Premium AI Analytics</span>
+    <span style="opacity: 0.7;">Flask &middot; SQLAlchemy &middot; Chart.js</span>
+  </footer>
+</div>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

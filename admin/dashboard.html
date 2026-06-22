@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — Pulse{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+
+{% block content %}
+<section class="admin-page" style="max-width: 1100px; margin: 0 auto; padding: 24px 0;">
+  
+  {% if not show_users %}
+  <!-- Admin Overview Platform Stats Bento -->
+  <div class="bento-grid" style="margin-bottom: 24px;">
+    
+    <div class="panel bento-col-1">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <span class="text-muted" style="font-size: 0.82rem; margin-bottom: 4px; font-weight: 500;">Total Users</span>
+          <h4 style="font-size: 1.8rem;">{{ stats.total_users }}</h4>
+        </div>
+        <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+          <i class="fas fa-users"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel bento-col-1">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <span class="text-muted" style="font-size: 0.82rem; margin-bottom: 4px; font-weight: 500;">Total Feedback</span>
+          <h4 style="font-size: 1.8rem;">{{ stats.total_feedback }}</h4>
+        </div>
+        <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+          <i class="fas fa-comments"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel bento-col-1">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <span class="text-muted" style="font-size: 0.82rem; margin-bottom: 4px; font-weight: 500;">Reports Generated</span>
+          <h4 style="font-size: 1.8rem;">{{ stats.total_reports }}</h4>
+        </div>
+        <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+          <i class="fas fa-file-invoice"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel bento-col-1">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <span class="text-muted" style="font-size: 0.82rem; margin-bottom: 4px; font-weight: 500;">Positive Ratio</span>
+          <h4 style="font-size: 1.8rem;">{{ stats.positive }}</h4>
+        </div>
+        <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--positive-bg); color: var(--positive); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+          <i class="fas fa-heart"></i>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Charts Bento row -->
+  <div class="bento-grid" style="margin-bottom: 24px;">
+    
+    <div class="panel bento-col-2">
+      <div class="panel__header">
+        <h3>Platform Sentiment Ratio</h3>
+      </div>
+      <div style="width: 100%; height: 260px; position: relative;">
+        <canvas id="adminSentimentChart"></canvas>
+      </div>
+    </div>
+    
+    <div class="panel bento-col-2">
+      <div class="panel__header">
+        <h3>Platform Category Breakdown</h3>
+      </div>
+      <div style="width: 100%; height: 260px; position: relative;">
+        <canvas id="adminCategoryChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Top Users list -->
+  <div class="panel" style="margin-bottom: 24px; padding: 28px;">
+    <div class="panel__header" style="margin-bottom: 16px;">
+      <h3><i class="fas fa-trophy" style="color: var(--warning);"></i> Platform Contributors</h3>
+      <p class="text-muted" style="font-size: 0.85rem;">Top accounts contributing customer feedback entries.</p>
+    </div>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Workspace Contributor</th>
+            <th>Feedback Entry Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in stats.top_users %}
+          <tr>
+            <td><strong>{{ u.username }}</strong></td>
+            <td><span class="tag tag--cat" style="font-size: 0.8rem;">{{ u.count }} entries</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- User Account Administration -->
+  <div class="panel" style="padding: 28px;">
+    <div class="panel__header" style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+      <h3 style="display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-users-cog" style="color: var(--accent);"></i> User Administration Management
+      </h3>
+      {% if not show_users %}
+      <a href="{{ url_for('admin.users_list') }}" class="btn btn--ghost btn--sm">Manage All Users</a>
+      {% endif %}
+    </div>
+    
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Access Permission</th>
+            <th>Account Status</th>
+            <th>Registration Date</th>
+            <th>Feedback Counts</th>
+            <th style="width: 160px; text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if show_users and users %}
+            {% for item in users %}
+            <tr>
+              <td><strong>{{ item.user.username }}</strong></td>
+              <td>{{ item.user.email }}</td>
+              <td>
+                <span class="tag tag--cat">{{ 'Administrator' if item.user.is_admin else 'Standard User' }}</span>
+              </td>
+              <td>
+                {% if item.user.is_suspended %}
+                  <span class="tag tag--neg">Suspended</span>
+                {% else %}
+                  <span class="tag tag--pos">Active</span>
+                {% endif %}
+              </td>
+              <td><span class="text-muted">{{ item.user.created_at.strftime('%b %d, %Y') if item.user.created_at }}</span></td>
+              <td><span class="mono">{{ item.feedback_count }}</span></td>
+              <td style="text-align: right;">
+                {% if not item.user.is_admin %}
+                <div style="display: inline-flex; gap: 8px; justify-content: flex-end;">
+                  <form method="POST" action="{{ url_for('admin.suspend_user', user_id=item.user.id) }}" style="display:inline">
+                    <button type="submit" class="btn btn--ghost btn--sm">
+                      {{ 'Unsuspend' if item.user.is_suspended else 'Suspend' }}
+                    </button>
+                  </form>
+                  <form method="POST" action="{{ url_for('admin.delete_user', user_id=item.user.id) }}" style="display:inline"
+                        onsubmit="return confirm('Permanently delete user {{ item.user.username }} and ALL associated feedback data?')">
+                    <button type="submit" class="btn btn--danger btn--sm"><i class="fas fa-trash"></i></button>
+                  </form>
+                </div>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% elif not show_users %}
+            {% for u in recent_users %}
+            <tr>
+              <td><strong>{{ u.username }}</strong></td>
+              <td>{{ u.email }}</td>
+              <td>
+                <span class="tag tag--cat">{{ 'Administrator' if u.is_admin else 'Standard User' }}</span>
+              </td>
+              <td>
+                {% if u.is_suspended %}
+                  <span class="tag tag--neg">Suspended</span>
+                {% else %}
+                  <span class="tag tag--pos">Active</span>
+                {% endif %}
+              </td>
+              <td><span class="text-muted">{{ u.created_at.strftime('%b %d, %Y') if u.created_at }}</span></td>
+              <td>—</td>
+              <td style="text-align: right;">
+                {% if not u.is_admin %}
+                <div style="display: inline-flex; gap: 8px; justify-content: flex-end;">
+                  <form method="POST" action="{{ url_for('admin.suspend_user', user_id=u.id) }}" style="display:inline">
+                    <button type="submit" class="btn btn--ghost btn--sm">
+                      {{ 'Unsuspend' if u.is_suspended else 'Suspend' }}
+                    </button>
+                  </form>
+                  <form method="POST" action="{{ url_for('admin.delete_user', user_id=u.id) }}" style="display:inline"
+                        onsubmit="return confirm('Permanently delete user {{ u.username }} and all their workspace data?')">
+                    <button type="submit" class="btn btn--danger btn--sm"><i class="fas fa-trash"></i></button>
+                  </form>
+                </div>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if show_users %}
+    <div style="text-align: center; margin-top: 24px;">
+      <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn--ghost btn--sm">
+        <i class="fas fa-arrow-left"></i> Back to Platform Overview
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if not show_users %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async function() {
+  const isLight = document.documentElement.classList.contains("theme-light");
+  
+  const c = {
+    positive: "#10b981",
+    negative: "#ef4444",
+    neutral: "#8b8fa3",
+    ink: isLight ? "#0f172a" : "#f3f4f6",
+    inkMuted: isLight ? "#64748b" : "#9ca3af",
+    grid: isLight ? "rgba(0, 0, 0, 0.05)" : "rgba(255, 255, 255, 0.05)",
+    border: isLight ? "#e2e8f0" : "rgba(255, 255, 255, 0.08)",
+    surface: isLight ? "#ffffff" : "#10121a",
+  };
+
+  const catColors = ["#6366f1", "#a855f7", "#ec4899", "#f59e0b", "#10b981", "#3b82f6"];
+
+  try {
+    const res = await fetch("/admin/api/stats");
+    const data = await res.json();
+
+    // Chart.js global config override
+    // Chart.js global config override and rendering
+    if (typeof Chart !== "undefined") {
+      Chart.defaults.color = c.inkMuted;
+      Chart.defaults.font.family = "'Inter', -apple-system, sans-serif";
+
+      // Platform Sentiment Ratio
+      new Chart(document.getElementById("adminSentimentChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Positive","Negative","Neutral"],
+          datasets: [{
+            data: [data.positive, data.negative, data.neutral],
+            backgroundColor: [c.positive, c.negative, c.neutral],
+            borderWidth: 0,
+            hoverOffset: 6
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "68%",
+          plugins: {
+            legend: { position: "bottom", labels: { color: c.ink, usePointStyle: true, padding: 12, boxWidth: 8 } }
+          }
+        },
+      });
+
+      // Platform Category Breakdown
+      const cats = Object.keys(data.categories || {});
+      const catVals = cats.map(k => data.categories[k]);
+      
+      new Chart(document.getElementById("adminCategoryChart"), {
+        type: "bar",
+        data: {
+          labels: cats,
+          datasets: [{
+            label: "Entries Count",
+            data: catVals,
+            backgroundColor: catColors.slice(0, cats.length),
+            borderRadius: 8
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: c.inkMuted }, grid: { display: false } },
+            y: { beginAtZero: true, ticks: { color: c.inkMuted, precision: 0 }, grid: { color: c.grid } }
+          },
+        },
+      });
+    } else {
+      console.warn("Chart.js not loaded. Skipping admin charts.");
+    }
+
+  } catch(err) {
+    console.error("Failed to load admin dashboard statistics:", err);
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

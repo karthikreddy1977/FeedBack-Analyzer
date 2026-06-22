@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Log in — Pulse{% endblock %}
+{% block page_title %}Log in{% endblock %}
+
+{% block content %}
+<div class="auth-layout" style="margin: -16px; min-height: 100vh;">
+  <!-- Left Side: Animated Liquid Glass Hero Panel -->
+  <div class="auth-hero">
+    <div class="auth-hero__shapes">
+      <div class="auth-shape auth-shape--1"></div>
+      <div class="auth-shape auth-shape--2"></div>
+    </div>
+    
+    <div class="auth-hero__content" style="position: relative; z-index: 2;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 32px;">
+        <div class="sidebar__logo" style="width: 40px; height: 40px;"></div>
+        <span class="sidebar__name" style="font-size: 1.8rem; color: #fff;">Pulse</span>
+      </div>
+      <h1>Understand your customers in real-time.</h1>
+      <p class="text-muted" style="font-size: 1.15rem; line-height: 1.6; margin-top: 16px;">
+        Pulse uses advanced natural language processing and emotion detection to transform raw user text into actionable bento insights.
+      </p>
+    </div>
+  </div>
+
+  <!-- Right Side: Floating Glass Login Card -->
+  <div class="auth-panel">
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <h2>Welcome back</h2>
+        <p class="text-muted">Enter your credentials to access your dashboard</p>
+      </div>
+
+      <form method="POST" action="{{ url_for('auth.login') }}">
+        <div class="form-group">
+          <label for="username" class="form-label">Username or Email</label>
+          <input type="text" id="username" name="username" class="form-control" autocomplete="username" required placeholder="name@company.com">
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" id="password" name="password" class="form-control" autocomplete="current-password" required placeholder="••••••••">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 0.88rem;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--ink-soft);">
+            <input type="checkbox" name="remember" style="accent-color: var(--accent);">
+            <span>Remember me</span>
+          </label>
+          <a href="{{ url_for('auth.forgot_password') }}" style="color: var(--accent); font-weight: 500;">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--full">
+          Sign In <i class="fas fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 32px; font-size: 0.88rem; color: var(--ink-soft);">
+        <span>Don't have an account? </span>
+        <a href="{{ url_for('auth.register') }}" style="color: var(--accent); font-weight: 600;">Sign up</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
